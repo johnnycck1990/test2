@@ -1,106 +1,899 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-HK">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Scientific Calculator</title>
+    <title>DSE 物理單位轉換學習應用程式</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#5D5CDE',
+                    }
+                }
+            }
+        }
+    </script>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            background-color: #f4f4f4;
-        }
-        #calculator {
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
-            padding: 20px;
-            width: 300px;
-        }
-        #display {
-            width: 100%;
-            height: 40px;
-            font-size: 24px;
-            text-align: right;
-            margin-bottom: 10px;
-            padding: 5px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-        }
-        button {
-            width: 60px;
-            height: 60px;
-            font-size: 20px;
-            margin: 5px;
-            border: none;
-            border-radius: 5px;
-            background-color: #007bff;
-            color: white;
-            cursor: pointer;
-        }
-        button:hover {
-            background-color: #0056b3;
+        .custom-modal {
+            background-color: rgba(0, 0, 0, 0.5);
         }
     </style>
 </head>
-<body>
+<body class="bg-white dark:bg-gray-900 text-gray-900 dark:text-white transition-colors duration-300">
+    <div class="container mx-auto px-4 py-6 max-w-4xl">
+        <!-- 標題 -->
+        <header class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-primary mb-2">DSE 物理單位轉換</h1>
+            <p class="text-gray-600 dark:text-gray-400">學習工具</p>
+        </header>
 
-<div id="calculator">
-    <input type="text" id="display" disabled>
-    <div>
-        <button onclick="clearDisplay()">C</button>
-        <button onclick="appendToDisplay('7')">7</button>
-        <button onclick="appendToDisplay('8')">8</button>
-        <button onclick="appendToDisplay('9')">9</button>
-        <button onclick="appendToDisplay('/')">/</button>
-    </div>
-    <div>
-        <button onclick="appendToDisplay('4')">4</button>
-        <button onclick="appendToDisplay('5')">5</button>
-        <button onclick="appendToDisplay('6')">6</button>
-        <button onclick="appendToDisplay('*')">*</button>
-    </div>
-    <div>
-        <button onclick="appendToDisplay('1')">1</button>
-        <button onclick="appendToDisplay('2')">2</button>
-        <button onclick="appendToDisplay('3')">3</button>
-        <button onclick="appendToDisplay('-')">-</button>
-    </div>
-    <div>
-        <button onclick="appendToDisplay('0')">0</button>
-        <button onclick="calculate()">=</button>
-        <button onclick="appendToDisplay('+')">+</button>
-        <button onclick="appendToDisplay('Math.sin(')">sin</button>
-    </div>
-    <div>
-        <button onclick="appendToDisplay('Math.cos(')">cos</button>
-        <button onclick="appendToDisplay('Math.tan(')">tan</button>
-        <button onclick="appendToDisplay('Math.sqrt(')">√</button>
-        <button onclick="appendToDisplay('Math.pow(')">x²</button>
-    </div>
-</div>
+        <!-- 用戶登入區域 -->
+        <div class="flex justify-end mb-4">
+            <div id="user-section">
+                <div id="sign-in-section" class="text-center">
+                    <div id="g_id_onload"
+                         data-client_id="YOUR_GOOGLE_CLIENT_ID"
+                         data-callback="handleCredentialResponse"
+                         data-auto_prompt="false">
+                    </div>
+                    <div class="g_id_signin"
+                         data-type="standard"
+                         data-size="medium"
+                         data-theme="outline"
+                         data-text="sign_in_with"
+                         data-shape="rectangular"
+                         data-logo_alignment="left">
+                    </div>
+                    <button onclick="signInDemo()" class="mt-2 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors text-sm">
+                        演示登入 (Demo)
+                    </button>
+                </div>
+                <div id="user-profile" class="hidden flex items-center space-x-3">
+                    <img id="user-avatar" class="w-10 h-10 rounded-full" alt="用戶頭像">
+                    <div>
+                        <div id="user-name" class="font-semibold text-sm"></div>
+                        <div id="user-email" class="text-xs text-gray-600 dark:text-gray-400"></div>
+                    </div>
+                    <button onclick="signOut()" class="text-sm text-red-500 hover:text-red-600">登出</button>
+                </div>
+            </div>
+        </div>
 
-<script>
-    function appendToDisplay(value) {
-        document.getElementById('display').value += value;
-    }
+        <!-- 導航選單 -->
+        <nav class="flex flex-wrap gap-2 mb-8 justify-center">
+            <button onclick="showSection('teaching')" class="nav-btn bg-primary text-white px-4 py-2 rounded-lg hover:bg-purple-600 transition-colors text-base">
+                📚 教學
+            </button>
+            <button onclick="showSection('quiz')" class="nav-btn bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-4 py-2 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors text-base">
+                📝 小測
+            </button>
+            <button onclick="showSection('leaderboard')" class="nav-btn bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-4 py-2 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors text-base">
+                🏆 排行榜
+            </button>
+        </nav>
 
-    function clearDisplay() {
-        document.getElementById('display').value = '';
-    }
+        <!-- 教學部分 -->
+        <div id="teaching-section" class="section">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <button onclick="showCategory('temperature')" class="category-btn p-4 border-2 border-red-200 dark:border-red-800 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
+                    <div class="text-2xl mb-2">🌡️</div>
+                    <h3 class="font-semibold text-red-600 dark:text-red-400">溫度轉換</h3>
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">°C, °F, K</p>
+                </button>
+                <button onclick="showCategory('prefixes')" class="category-btn p-4 border-2 border-blue-200 dark:border-blue-800 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors">
+                    <div class="text-2xl mb-2">📏</div>
+                    <h3 class="font-semibold text-blue-600 dark:text-blue-400">單位前綴轉換</h3>
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">k, M, G, m, μ, n, c</p>
+                </button>
+            </div>
 
-    function calculate() {
-        try {
-            const result = eval(document.getElementById('display').value);
-            document.getElementById('display').value = result;
-        } catch (error) {
-            document.getElementById('display').value = 'Error';
+            <!-- 教學內容 -->
+            <div id="teaching-content" class="bg-gray-50 dark:bg-gray-800 rounded-lg p-6"></div>
+        </div>
+
+        <!-- 小測部分 -->
+        <div id="quiz-section" class="section hidden">
+            <div class="text-center mb-6">
+                <button onclick="startQuiz()" class="bg-primary text-white px-6 py-3 rounded-lg hover:bg-purple-600 transition-colors text-lg font-semibold">
+                    開始小測 (10題)
+                </button>
+            </div>
+
+            <div id="quiz-content" class="hidden">
+                <div class="flex justify-between items-center mb-4">
+                    <span class="text-lg font-semibold">題目 <span id="current-question">1</span> / 10</span>
+                    <span class="text-lg">分數: <span id="score">0</span></span>
+                </div>
+
+                <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-6 mb-4">
+                    <h3 class="text-xl mb-4" id="question-text"></h3>
+                    <div class="space-y-2">
+                        <input type="text" id="answer-input" class="w-full p-3 border rounded-lg text-base dark:bg-gray-700 dark:border-gray-600" placeholder="輸入你的答案（3位有效數字）">
+                    </div>
+                    <button onclick="checkAnswer()" class="mt-4 bg-primary text-white px-4 py-2 rounded-lg hover:bg-purple-600 transition-colors">
+                        提交答案
+                    </button>
+                </div>
+
+                <div id="feedback" class="hidden p-4 rounded-lg mb-4"></div>
+
+                <button id="next-button" onclick="nextQuestion()" class="hidden bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors">
+                    下一題
+                </button>
+            </div>
+
+            <!-- 結果 -->
+            <div id="quiz-results" class="hidden text-center">
+                <h2 class="text-2xl font-bold mb-4">小測完成！</h2>
+                <p class="text-xl mb-4">最終分數: <span id="final-score"></span> / 10</p>
+                <div id="score-submission" class="mb-4">
+                    <p class="text-gray-600 dark:text-gray-400 mb-2">成績已記錄到排行榜</p>
+                </div>
+                <button onclick="startQuiz()" class="bg-primary text-white px-6 py-3 rounded-lg hover:bg-purple-600 transition-colors">
+                    重新開始
+                </button>
+            </div>
+        </div>
+
+        <!-- 排行榜部分 -->
+        <div id="leaderboard-section" class="section hidden">
+            <div class="mb-6">
+                <h2 class="text-2xl font-bold mb-4 text-center">🏆 排行榜</h2>
+                <div class="text-center mb-4">
+                    <button onclick="refreshLeaderboard()" class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-purple-600 transition-colors">
+                        刷新排行榜
+                    </button>
+                </div>
+            </div>
+
+            <!-- 個人統計 -->
+            <div id="personal-stats" class="hidden bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-lg p-6 mb-6">
+                <h3 class="text-lg font-semibold mb-3">個人統計</h3>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                    <div>
+                        <div class="text-2xl font-bold text-primary" id="personal-best">0</div>
+                        <div class="text-sm text-gray-600 dark:text-gray-400">最高分</div>
+                    </div>
+                    <div>
+                        <div class="text-2xl font-bold text-green-600" id="personal-average">0.0</div>
+                        <div class="text-sm text-gray-600 dark:text-gray-400">平均分</div>
+                    </div>
+                    <div>
+                        <div class="text-2xl font-bold text-blue-600" id="personal-attempts">0</div>
+                        <div class="text-sm text-gray-600 dark:text-gray-400">測試次數</div>
+                    </div>
+                    <div>
+                        <div class="text-2xl font-bold text-purple-600" id="personal-rank">-</div>
+                        <div class="text-sm text-gray-600 dark:text-gray-400">排名</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 排行榜表格 -->
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden">
+                <div class="px-6 py-4 bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
+                    <h3 class="text-lg font-semibold">全球排行榜</h3>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">基於最高分排名</p>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-gray-50 dark:bg-gray-700">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">排名</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">學生</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">最高分</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">平均分</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">測試次數</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">最後更新</th>
+                            </tr>
+                        </thead>
+                        <tbody id="leaderboard-body" class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                            <!-- 排行榜內容將動態生成 -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 未登入提示 -->
+            <div id="login-prompt" class="text-center py-12">
+                <div class="text-gray-400 text-6xl mb-4">🔒</div>
+                <h3 class="text-xl font-semibold mb-2">請先登入</h3>
+                <p class="text-gray-600 dark:text-gray-400 mb-4">登入Google帳戶以查看排行榜和記錄成績</p>
+                <button onclick="signInDemo()" class="bg-primary text-white px-6 py-3 rounded-lg hover:bg-purple-600 transition-colors">
+                    立即登入
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 深色模式處理
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
         }
-    }
-</script>
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+            if (event.matches) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        });
 
+        // 3位有效數字格式化函數
+        function formatToThreeSignificantFigures(num) {
+            if (num === 0) return "0.00";
+            
+            const absNum = Math.abs(num);
+            let digits = Math.floor(Math.log10(absNum)) + 1;
+            
+            if (digits >= 3) {
+                return num.toPrecision(3);
+            } else if (digits === 2) {
+                return num.toFixed(1);
+            } else if (digits === 1) {
+                return num.toFixed(2);
+            } else {
+                // 小於1的數字
+                const decimalPlaces = Math.ceil(-Math.log10(absNum)) + 2;
+                return num.toFixed(decimalPlaces);
+            }
+        }
+
+        // 教學內容數據
+        const teachingData = {
+            temperature: {
+                title: "溫度轉換",
+                content: [
+                    {
+                        category: "攝氏度 ↔ 克耳文 (°C ↔ K)",
+                        formula: "K = °C + 273.15",
+                        examples: [
+                            "25.0°C = 25.0 + 273.15 = 298.15 K",
+                            "0.00°C = 0.00 + 273.15 = 273.15 K",
+                            "100.0°C = 100.0 + 273.15 = 373.15 K",
+                            "反之：300.0 K = 300.0 - 273.15 = 26.85°C"
+                        ]
+                    },
+                    {
+                        category: "攝氏度 ↔ 華氏度 (°C ↔ °F)",
+                        formula: "°F = (9/5) × °C + 32",
+                        examples: [
+                            "0.00°C = (9/5) × 0.00 + 32 = 32.0°F",
+                            "25.0°C = (9/5) × 25.0 + 32 = 77.0°F",
+                            "100.0°C = (9/5) × 100.0 + 32 = 212.0°F",
+                            "反之：68.0°F = (68.0 - 32) × (5/9) = 20.0°C"
+                        ]
+                    },
+                    {
+                        category: "克耳文 ↔ 華氏度 (K ↔ °F)",
+                        formula: "°F = (9/5) × (K - 273.15) + 32",
+                        examples: [
+                            "273.15 K = (9/5) × (273.15 - 273.15) + 32 = 32.0°F",
+                            "298.15 K = (9/5) × (298.15 - 273.15) + 32 = 77.0°F",
+                            "反之：212.0°F = ((212.0 - 32) × 5/9) + 273.15 = 373.15 K"
+                        ]
+                    }
+                ]
+            },
+            prefixes: {
+                title: "單位前綴轉換",
+                content: [
+                    {
+                        category: "大單位前綴（比基本單位大）",
+                        formula: "k (千) = 10³, M (兆) = 10⁶, G (吉) = 10⁹",
+                        examples: [
+                            "1.00 km = 1.00 × 10³ m = 1000 m",
+                            "2.50 MW = 2.50 × 10⁶ W = 2,500,000 W",
+                            "3.20 GHz = 3.20 × 10⁹ Hz = 3,200,000,000 Hz",
+                            "0.750 kV = 0.750 × 10³ V = 750 V"
+                        ]
+                    },
+                    {
+                        category: "小單位前綴（比基本單位小）",
+                        formula: "m (毫) = 10⁻³, μ (微) = 10⁻⁶, n (納) = 10⁻⁹",
+                        examples: [
+                            "500 mm = 500 × 10⁻³ m = 0.500 m",
+                            "250 μA = 250 × 10⁻⁶ A = 0.000250 A",
+                            "750 nm = 750 × 10⁻⁹ m = 0.000000750 m",
+                            "1.50 ms = 1.50 × 10⁻³ s = 0.00150 s"
+                        ]
+                    },
+                    {
+                        category: "百分位前綴",
+                        formula: "c (厘) = 10⁻²",
+                        examples: [
+                            "25.0 cm = 25.0 × 10⁻² m = 0.250 m",
+                            "150 cm = 150 × 10⁻² m = 1.50 m",
+                            "反之：0.750 m = 0.750 ÷ 10⁻² = 75.0 cm"
+                        ]
+                    },
+                    {
+                        category: "單位間轉換示例",
+                        formula: "先轉回基本單位，再轉到目標單位",
+                        examples: [
+                            "2.50 km → mm：2.50 × 10³ m × 10³ mm/m = 2,500,000 mm",
+                            "750 μm → cm：750 × 10⁻⁶ m ÷ 10⁻² m/cm = 0.0750 cm",
+                            "1.20 MHz → kHz：1.20 × 10⁶ Hz ÷ 10³ Hz/kHz = 1200 kHz",
+                            "500 mV → μV：500 × 10⁻³ V × 10⁶ μV/V = 500,000 μV"
+                        ]
+                    }
+                ]
+            }
+        };
+
+        // 小測題目庫
+        const quizQuestions = [
+            // 溫度轉換
+            { question: "將 {temp}°C 轉換為克耳文 (K)", 
+              generator: () => {
+                  const temp = Math.round((Math.random() * 100 - 20) * 10) / 10;
+                  return {
+                      question: `將 ${formatToThreeSignificantFigures(temp)}°C 轉換為克耳文 (K)`,
+                      answer: formatToThreeSignificantFigures(temp + 273.15),
+                      unit: "K"
+                  };
+              }
+            },
+            { question: "將 {temp}K 轉換為攝氏度 (°C)", 
+              generator: () => {
+                  const tempK = Math.round((Math.random() * 100 + 250) * 10) / 10;
+                  return {
+                      question: `將 ${formatToThreeSignificantFigures(tempK)} K 轉換為攝氏度 (°C)`,
+                      answer: formatToThreeSignificantFigures(tempK - 273.15),
+                      unit: "°C"
+                  };
+              }
+            },
+            { question: "將 {temp}°C 轉換為華氏度 (°F)", 
+              generator: () => {
+                  const temp = Math.round((Math.random() * 80 - 10) * 10) / 10;
+                  return {
+                      question: `將 ${formatToThreeSignificantFigures(temp)}°C 轉換為華氏度 (°F)`,
+                      answer: formatToThreeSignificantFigures(temp * 9/5 + 32),
+                      unit: "°F"
+                  };
+              }
+            },
+            { question: "將 {temp}°F 轉換為攝氏度 (°C)", 
+              generator: () => {
+                  const tempF = Math.round((Math.random() * 140 + 20) * 10) / 10;
+                  return {
+                      question: `將 ${formatToThreeSignificantFigures(tempF)}°F 轉換為攝氏度 (°C)`,
+                      answer: formatToThreeSignificantFigures((tempF - 32) * 5/9),
+                      unit: "°C"
+                  };
+              }
+            },
+            
+            // k 單位轉換
+            { question: "將 {value} km 轉換為 m", 
+              generator: () => {
+                  const value = Math.round((Math.random() * 9 + 1) * 100) / 100;
+                  return {
+                      question: `將 ${formatToThreeSignificantFigures(value)} km 轉換為 m`,
+                      answer: formatToThreeSignificantFigures(value * 1000),
+                      unit: "m"
+                  };
+              }
+            },
+            { question: "將 {value} kW 轉換為 W", 
+              generator: () => {
+                  const value = Math.round((Math.random() * 50 + 1) * 10) / 10;
+                  return {
+                      question: `將 ${formatToThreeSignificantFigures(value)} kW 轉換為 W`,
+                      answer: formatToThreeSignificantFigures(value * 1000),
+                      unit: "W"
+                  };
+              }
+            },
+            { question: "將 {value} kHz 轉換為 Hz", 
+              generator: () => {
+                  const value = Math.round((Math.random() * 990 + 10) * 10) / 10;
+                  return {
+                      question: `將 ${formatToThreeSignificantFigures(value)} kHz 轉換為 Hz`,
+                      answer: formatToThreeSignificantFigures(value * 1000),
+                      unit: "Hz"
+                  };
+              }
+            },
+            
+            // M 單位轉換  
+            { question: "將 {value} MHz 轉換為 Hz", 
+              generator: () => {
+                  const value = Math.round((Math.random() * 99 + 1) * 10) / 10;
+                  return {
+                      question: `將 ${formatToThreeSignificantFigures(value)} MHz 轉換為 Hz`,
+                      answer: formatToThreeSignificantFigures(value * 1000000),
+                      unit: "Hz"
+                  };
+              }
+            },
+            { question: "將 {value} MΩ 轉換為 Ω", 
+              generator: () => {
+                  const value = Math.round((Math.random() * 9 + 1) * 100) / 100;
+                  return {
+                      question: `將 ${formatToThreeSignificantFigures(value)} MΩ 轉換為 Ω`,
+                      answer: formatToThreeSignificantFigures(value * 1000000),
+                      unit: "Ω"
+                  };
+              }
+            },
+            
+            // m 單位轉換
+            { question: "將 {value} mm 轉換為 m", 
+              generator: () => {
+                  const value = Math.round((Math.random() * 999 + 1));
+                  return {
+                      question: `將 ${formatToThreeSignificantFigures(value)} mm 轉換為 m`,
+                      answer: formatToThreeSignificantFigures(value / 1000),
+                      unit: "m"
+                  };
+              }
+            },
+            { question: "將 {value} mA 轉換為 A", 
+              generator: () => {
+                  const value = Math.round((Math.random() * 999 + 1));
+                  return {
+                      question: `將 ${formatToThreeSignificantFigures(value)} mA 轉換為 A`,
+                      answer: formatToThreeSignificantFigures(value / 1000),
+                      unit: "A"
+                  };
+              }
+            },
+            { question: "將 {value} ms 轉換為 s", 
+              generator: () => {
+                  const value = Math.round((Math.random() * 999 + 1));
+                  return {
+                      question: `將 ${formatToThreeSignificantFigures(value)} ms 轉換為 s`,
+                      answer: formatToThreeSignificantFigures(value / 1000),
+                      unit: "s"
+                  };
+              }
+            },
+            
+            // μ 單位轉換
+            { question: "將 {value} μA 轉換為 A", 
+              generator: () => {
+                  const value = Math.round((Math.random() * 999 + 1));
+                  return {
+                      question: `將 ${formatToThreeSignificantFigures(value)} μA 轉換為 A`,
+                      answer: formatToThreeSignificantFigures(value / 1000000),
+                      unit: "A"
+                  };
+              }
+            },
+            { question: "將 {value} μF 轉換為 F", 
+              generator: () => {
+                  const value = Math.round((Math.random() * 999 + 1));
+                  return {
+                      question: `將 ${formatToThreeSignificantFigures(value)} μF 轉換為 F`,
+                      answer: formatToThreeSignificantFigures(value / 1000000),
+                      unit: "F"
+                  };
+              }
+            },
+            
+            // n 單位轉換
+            { question: "將 {value} nm 轉換為 m", 
+              generator: () => {
+                  const value = Math.round((Math.random() * 999 + 1));
+                  return {
+                      question: `將 ${formatToThreeSignificantFigures(value)} nm 轉換為 m`,
+                      answer: formatToThreeSignificantFigures(value / 1000000000),
+                      unit: "m"
+                  };
+              }
+            },
+            
+            // c 單位轉換
+            { question: "將 {value} cm 轉換為 m", 
+              generator: () => {
+                  const value = Math.round((Math.random() * 99 + 1));
+                  return {
+                      question: `將 ${formatToThreeSignificantFigures(value)} cm 轉換為 m`,
+                      answer: formatToThreeSignificantFigures(value / 100),
+                      unit: "m"
+                  };
+              }
+            },
+            
+            // 混合轉換
+            { question: "將 {value} km 轉換為 cm", 
+              generator: () => {
+                  const value = Math.round((Math.random() * 9 + 1) * 100) / 100;
+                  return {
+                      question: `將 ${formatToThreeSignificantFigures(value)} km 轉換為 cm`,
+                      answer: formatToThreeSignificantFigures(value * 100000),
+                      unit: "cm"
+                  };
+              }
+            },
+            { question: "將 {value} MHz 轉換為 kHz", 
+              generator: () => {
+                  const value = Math.round((Math.random() * 99 + 1) * 10) / 10;
+                  return {
+                      question: `將 ${formatToThreeSignificantFigures(value)} MHz 轉換為 kHz`,
+                      answer: formatToThreeSignificantFigures(value * 1000),
+                      unit: "kHz"
+                  };
+              }
+            }
+        ];
+
+        let currentQuizQuestions = [];
+        let currentQuestionIndex = 0;
+        let quizScore = 0;
+
+        // 顯示部分
+        function showSection(section) {
+            document.querySelectorAll('.section').forEach(s => s.classList.add('hidden'));
+            document.getElementById(section + '-section').classList.remove('hidden');
+            
+            // 更新導航按鈕
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('bg-primary', 'text-white');
+                btn.classList.add('bg-gray-200', 'dark:bg-gray-700', 'text-gray-700', 'dark:text-gray-300');
+            });
+            event.target.classList.remove('bg-gray-200', 'dark:bg-gray-700', 'text-gray-700', 'dark:text-gray-300');
+            event.target.classList.add('bg-primary', 'text-white');
+        }
+
+        // 顯示教學分類
+        function showCategory(category) {
+            const data = teachingData[category];
+            const content = document.getElementById('teaching-content');
+            
+            let html = `<h2 class="text-2xl font-bold mb-6">${data.title}</h2>`;
+            
+            data.content.forEach(section => {
+                html += `
+                    <div class="mb-8">
+                        <h3 class="text-xl font-semibold mb-3 text-primary">${section.category}</h3>
+                        <div class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg mb-4">
+                            <h4 class="font-semibold text-blue-700 dark:text-blue-300 mb-2">轉換公式：</h4>
+                            <p class="text-blue-800 dark:text-blue-200 font-mono">${section.formula}</p>
+                        </div>
+                        <h4 class="font-semibold mb-3 text-gray-700 dark:text-gray-300">詳細例子：</h4>
+                        <div class="space-y-2">
+                            ${section.examples.map(example => `
+                                <div class="bg-white dark:bg-gray-700 p-3 rounded border border-gray-200 dark:border-gray-600">
+                                    <span class="font-mono text-sm">${example}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            content.innerHTML = html;
+        }
+
+        // 開始小測
+        function startQuiz() {
+            // 隨機選取10道題目並生成
+            const shuffled = [...quizQuestions].sort(() => 0.5 - Math.random());
+            currentQuizQuestions = shuffled.slice(0, 10).map(q => q.generator());
+            
+            currentQuestionIndex = 0;
+            quizScore = 0;
+            
+            document.getElementById('quiz-content').classList.remove('hidden');
+            document.getElementById('quiz-results').classList.add('hidden');
+            
+            showQuestion();
+        }
+
+        // 顯示題目
+        function showQuestion() {
+            const question = currentQuizQuestions[currentQuestionIndex];
+            document.getElementById('current-question').textContent = currentQuestionIndex + 1;
+            document.getElementById('score').textContent = quizScore;
+            document.getElementById('question-text').textContent = question.question;
+            document.getElementById('answer-input').value = '';
+            document.getElementById('feedback').classList.add('hidden');
+            document.getElementById('next-button').classList.add('hidden');
+        }
+
+        // 檢查答案
+        function checkAnswer() {
+            const userAnswer = document.getElementById('answer-input').value.trim();
+            const question = currentQuizQuestions[currentQuestionIndex];
+            const feedback = document.getElementById('feedback');
+            
+            if (!userAnswer) {
+                feedback.innerHTML = '<p class="text-red-600">請輸入答案</p>';
+                feedback.className = 'p-4 rounded-lg mb-4 bg-red-100 dark:bg-red-900/20';
+                feedback.classList.remove('hidden');
+                return;
+            }
+            
+            // 移除答案中的空格和單位，只比較數字部分
+            const userNumericAnswer = userAnswer.replace(/[^\d.-]/g, '');
+            const correctNumericAnswer = question.answer.replace(/[^\d.-]/g, '');
+            
+            const userNum = parseFloat(userNumericAnswer);
+            const correctNum = parseFloat(correctNumericAnswer);
+            
+            if (isNaN(userNum)) {
+                feedback.innerHTML = '<p class="text-red-600">請輸入有效數字</p>';
+                feedback.className = 'p-4 rounded-lg mb-4 bg-red-100 dark:bg-red-900/20';
+                feedback.classList.remove('hidden');
+                return;
+            }
+            
+            // 允許1%的誤差範圍
+            const tolerance = Math.abs(correctNum) * 0.01;
+            const isCorrect = Math.abs(userNum - correctNum) <= tolerance;
+            
+            if (isCorrect) {
+                quizScore++;
+                feedback.innerHTML = `<p class="text-green-600">✅ 正確！答案是 ${question.answer} ${question.unit}</p>`;
+                feedback.className = 'p-4 rounded-lg mb-4 bg-green-100 dark:bg-green-900/20';
+            } else {
+                feedback.innerHTML = `<p class="text-red-600">❌ 錯誤。正確答案是 ${question.answer} ${question.unit}</p>`;
+                feedback.className = 'p-4 rounded-lg mb-4 bg-red-100 dark:bg-red-900/20';
+            }
+            
+            feedback.classList.remove('hidden');
+            document.getElementById('next-button').classList.remove('hidden');
+            document.getElementById('score').textContent = quizScore;
+        }
+
+        // 下一題
+        function nextQuestion() {
+            currentQuestionIndex++;
+            
+            if (currentQuestionIndex >= currentQuizQuestions.length) {
+                showResults();
+            } else {
+                showQuestion();
+            }
+        }
+
+        // 顯示結果
+        function showResults() {
+            document.getElementById('quiz-content').classList.add('hidden');
+            document.getElementById('quiz-results').classList.remove('hidden');
+            document.getElementById('final-score').textContent = quizScore;
+            
+            // 記錄分數到排行榜
+            if (currentUser) {
+                recordScore(quizScore);
+                document.getElementById('score-submission').innerHTML = `
+                    <p class="text-green-600 dark:text-green-400 mb-2">✅ 成績已記錄到排行榜</p>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">分數: ${quizScore}/10</p>
+                `;
+            } else {
+                document.getElementById('score-submission').innerHTML = `
+                    <p class="text-yellow-600 dark:text-yellow-400 mb-2">⚠️ 請登入以記錄成績到排行榜</p>
+                    <button onclick="signInDemo()" class="text-primary hover:text-purple-600 underline">立即登入</button>
+                `;
+            }
+        }
+
+        // 回車提交答案
+        document.addEventListener('keypress', function(event) {
+            if (event.key === 'Enter' && !document.getElementById('quiz-content').classList.contains('hidden')) {
+                if (!document.getElementById('next-button').classList.contains('hidden')) {
+                    nextQuestion();
+                } else {
+                    checkAnswer();
+                }
+            }
+        });
+
+        // 用戶管理和排行榜系統
+        let currentUser = null;
+        let leaderboardData = [
+            // 演示數據 - 實際應用中這些數據應該從後端API獲取
+            { name: "張小明", email: "ming@example.com", avatar: "https://picsum.photos/100/100?random=1", bestScore: 10, average: 9.2, attempts: 15, lastUpdate: "2024-01-15" },
+            { name: "李小華", email: "hua@example.com", avatar: "https://picsum.photos/100/100?random=2", bestScore: 9, average: 8.7, attempts: 12, lastUpdate: "2024-01-14" },
+            { name: "王小美", email: "mei@example.com", avatar: "https://picsum.photos/100/100?random=3", bestScore: 9, average: 8.1, attempts: 18, lastUpdate: "2024-01-13" },
+            { name: "陳小強", email: "qiang@example.com", avatar: "https://picsum.photos/100/100?random=4", bestScore: 8, average: 7.5, attempts: 9, lastUpdate: "2024-01-12" },
+            { name: "林小雅", email: "ya@example.com", avatar: "https://picsum.photos/100/100?random=5", bestScore: 8, average: 7.2, attempts: 14, lastUpdate: "2024-01-11" }
+        ];
+
+        // Google登入回調函數
+        function handleCredentialResponse(response) {
+            // 解析JWT token (在實際應用中應該在後端驗證)
+            const userInfo = parseJWT(response.credential);
+            signInUser({
+                name: userInfo.name,
+                email: userInfo.email,
+                avatar: userInfo.picture
+            });
+        }
+
+        // 解析JWT token (簡化版本，實際應用中應在後端處理)
+        function parseJWT(token) {
+            try {
+                const base64Url = token.split('.')[1];
+                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+                    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                }).join(''));
+                return JSON.parse(jsonPayload);
+            } catch (e) {
+                console.error('Error parsing JWT:', e);
+                return null;
+            }
+        }
+
+        // 演示登入功能
+        function signInDemo() {
+            const demoUsers = [
+                { name: "演示用戶", email: "demo@example.com", avatar: "https://picsum.photos/100/100?random=99" },
+                { name: "測試學生", email: "student@test.com", avatar: "https://picsum.photos/100/100?random=98" }
+            ];
+            const randomUser = demoUsers[Math.floor(Math.random() * demoUsers.length)];
+            signInUser(randomUser);
+        }
+
+        // 用戶登入處理
+        function signInUser(userInfo) {
+            currentUser = userInfo;
+            
+            // 更新UI
+            document.getElementById('sign-in-section').classList.add('hidden');
+            document.getElementById('user-profile').classList.remove('hidden');
+            document.getElementById('user-name').textContent = userInfo.name;
+            document.getElementById('user-email').textContent = userInfo.email;
+            document.getElementById('user-avatar').src = userInfo.avatar;
+            
+            // 檢查是否是新用戶，如果是則添加到排行榜
+            if (!leaderboardData.find(user => user.email === userInfo.email)) {
+                leaderboardData.push({
+                    name: userInfo.name,
+                    email: userInfo.email,
+                    avatar: userInfo.avatar,
+                    bestScore: 0,
+                    average: 0,
+                    attempts: 0,
+                    lastUpdate: new Date().toISOString().split('T')[0]
+                });
+            }
+            
+            updateLeaderboardDisplay();
+        }
+
+        // 用戶登出
+        function signOut() {
+            currentUser = null;
+            
+            // 更新UI
+            document.getElementById('sign-in-section').classList.remove('hidden');
+            document.getElementById('user-profile').classList.add('hidden');
+            document.getElementById('personal-stats').classList.add('hidden');
+            
+            updateLeaderboardDisplay();
+        }
+
+        // 記錄測試分數
+        function recordScore(score) {
+            if (!currentUser) return;
+            
+            const userIndex = leaderboardData.findIndex(user => user.email === currentUser.email);
+            if (userIndex !== -1) {
+                const user = leaderboardData[userIndex];
+                
+                // 更新統計數據
+                if (score > user.bestScore) {
+                    user.bestScore = score;
+                }
+                user.attempts++;
+                
+                // 計算新的平均分
+                if (user.attempts === 1) {
+                    user.average = score;
+                } else {
+                    // 簡化的平均分計算 - 實際應用中應該記錄所有分數
+                    user.average = ((user.average * (user.attempts - 1)) + score) / user.attempts;
+                    user.average = Math.round(user.average * 10) / 10; // 保留一位小數
+                }
+                
+                user.lastUpdate = new Date().toISOString().split('T')[0];
+                
+                // 重新排序排行榜
+                leaderboardData.sort((a, b) => {
+                    if (b.bestScore !== a.bestScore) return b.bestScore - a.bestScore;
+                    return b.average - a.average;
+                });
+                
+                updateLeaderboardDisplay();
+            }
+        }
+
+        // 更新排行榜顯示
+        function updateLeaderboardDisplay() {
+            const isLoggedIn = currentUser !== null;
+            
+            // 顯示/隱藏相關元素
+            document.getElementById('login-prompt').style.display = isLoggedIn ? 'none' : 'block';
+            document.getElementById('personal-stats').style.display = isLoggedIn ? 'block' : 'none';
+            
+            if (!isLoggedIn) return;
+            
+            // 更新個人統計
+            const userStats = leaderboardData.find(user => user.email === currentUser.email);
+            if (userStats) {
+                document.getElementById('personal-best').textContent = userStats.bestScore;
+                document.getElementById('personal-average').textContent = userStats.average.toFixed(1);
+                document.getElementById('personal-attempts').textContent = userStats.attempts;
+                
+                // 計算排名
+                const rank = leaderboardData.findIndex(user => user.email === currentUser.email) + 1;
+                document.getElementById('personal-rank').textContent = rank > 0 ? `#${rank}` : '-';
+            }
+            
+            // 更新排行榜表格
+            const tbody = document.getElementById('leaderboard-body');
+            tbody.innerHTML = leaderboardData.map((user, index) => {
+                const isCurrentUser = currentUser && user.email === currentUser.email;
+                return `
+                    <tr class="${isCurrentUser ? 'bg-blue-50 dark:bg-blue-900/20' : ''}">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
+                            <div class="flex items-center">
+                                ${index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `#${index + 1}`}
+                                ${isCurrentUser ? '<span class="ml-2 text-blue-500">（你）</span>' : ''}
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                            <div class="flex items-center">
+                                <img class="w-8 h-8 rounded-full mr-3" src="${user.avatar}" alt="${user.name}">
+                                <div>
+                                    <div class="font-medium">${user.name}</div>
+                                    <div class="text-gray-500 dark:text-gray-400 text-xs">${user.email}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                user.bestScore === 10 ? 'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100' :
+                                user.bestScore >= 8 ? 'bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-100' :
+                                user.bestScore >= 6 ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-100' :
+                                'bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100'
+                            }">
+                                ${user.bestScore}/10
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                            ${user.average.toFixed(1)}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                            ${user.attempts}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                            ${user.lastUpdate}
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // 刷新排行榜
+        function refreshLeaderboard() {
+            // 在實際應用中，這裡應該從後端API獲取最新數據
+            updateLeaderboardDisplay();
+            
+            // 顯示刷新反饋
+            const button = event.target;
+            const originalText = button.textContent;
+            button.textContent = '刷新中...';
+            button.disabled = true;
+            
+            setTimeout(() => {
+                button.textContent = originalText;
+                button.disabled = false;
+            }, 1000);
+        }
+
+        // 初始化 - 顯示溫度轉換教學
+        showCategory('temperature');
+        updateLeaderboardDisplay();
+    </script>
 </body>
 </html>
